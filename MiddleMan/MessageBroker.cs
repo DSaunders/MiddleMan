@@ -14,11 +14,13 @@ namespace MiddleMan
     {
         private readonly IEnumerable<IHandler> _handlers;
         private readonly IList<ISubscription> _messageSubscibers;
+
         public MessageBroker(IEnumerable<IHandler> handlers)
         {
             _handlers = handlers;
             _messageSubscibers = new List<ISubscription>();
         }
+
 
         public TOut ProcessQuery<TOut>(IQuery<TOut> query)
         {
@@ -33,6 +35,20 @@ namespace MiddleMan
             // Can we do this by casting to the interface? Didn't work immediately, investigate.
             var handler = (dynamic)handlers.First();
             return handler.HandleQuery((dynamic)query);
+        }
+
+        public Task<TOut> ProcessQueryAsync<TOut>(IQuery<TOut> query)
+        {
+            var handlers = GetAsyncQueryHandlers(query);
+
+            if (!handlers.Any())
+                throw new NoHandlerException($"No Async QueryHandler found for {query.GetType().Name}");
+
+            if (handlers.Length > 1)
+                throw new MultipleHandlersException($"{handlers.Length} Async QueryHandlers found for {query.GetType().Name}");
+
+            var handler = (dynamic)handlers.First();
+            return handler.HandleQueryAsync((dynamic)query);
         }
 
         public void ProcessCommand(ICommand command)
@@ -56,6 +72,10 @@ namespace MiddleMan
             if (!handlers.Any())
                 throw new NoHandlerException($"No Async CommandHandler found for {command.GetType().Name}");
 
+
+            if (handlers.Length > 1)
+                throw new MultipleHandlersException($"{handlers.Length} Async CommandHandlers found for {command.GetType().Name}");
+
             dynamic handler = handlers.First();
             await handler.HandleCommandAsync((dynamic) command);
         }
@@ -78,6 +98,7 @@ namespace MiddleMan
         {
             _messageSubscibers.Add(new Subscription<IMessage>(messageCallback));
         }
+
 
         private IHandler[] GetCommandHandlers(ICommand command)
         {
@@ -107,6 +128,17 @@ namespace MiddleMan
                     i.GetGenericTypeDefinition() == typeof (IQueryHandler<,>) &&
                     i.GetGenericArguments()[0] == query.GetType() &&
                     i.GetGenericArguments()[1] == typeof (TOut)))
+                .ToArray();
+        }
+
+        private IHandler[] GetAsyncQueryHandlers<TOut>(IQuery<TOut> query)
+        {
+            return _handlers
+                .Where(p => p.GetType().GetInterfaces().Any(i =>
+                    i.IsGenericType &&
+                    i.GetGenericTypeDefinition() == typeof(IQueryHandlerAsync<,>) &&
+                    i.GetGenericArguments()[0] == query.GetType() &&
+                    i.GetGenericArguments()[1] == typeof(TOut)))
                 .ToArray();
         }
     }

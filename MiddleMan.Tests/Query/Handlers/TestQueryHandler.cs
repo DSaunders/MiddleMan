@@ -1,6 +1,6 @@
 ﻿namespace MiddleMan.Tests.Query.Handlers
 {
-    using MiddleMan.Interfaces.Query;
+    using Interfaces.Query;
 
     public class TestQueryHandler : IQueryHandler<TestQuery, string>
     {
