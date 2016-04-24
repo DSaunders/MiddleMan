@@ -1,6 +1,6 @@
 ﻿namespace MiddleMan.Tests.Command.Handlers
 {
-    using MiddleMan.Interfaces.Command;
+    using Interfaces.Command;
 
     public class TestCommandHandler : ICommandHandler<TestCommand>
     {

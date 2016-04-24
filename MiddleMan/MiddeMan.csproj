@@ -43,6 +43,7 @@
     <Compile Include="Exceptions\MultipleHandlersException.cs" />
     <Compile Include="Exceptions\MiddleManExceptionBase.cs" />
     <Compile Include="Interfaces\Command\ICommandHandler.cs" />
+    <Compile Include="Interfaces\Command\ICommandHandlerAsync.cs" />
     <Compile Include="Interfaces\IHandler.cs" />
     <Compile Include="Interfaces\Command\ICommand.cs" />
     <Compile Include="Interfaces\Message\IMessage.cs" />

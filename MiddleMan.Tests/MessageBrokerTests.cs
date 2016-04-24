@@ -1,13 +1,14 @@
 ﻿namespace MiddleMan.Tests
 {
     using System.Collections.Generic;
+    using System.Threading.Tasks;
     using Command;
     using Command.Handlers;
     using Message;
     using MiddleMan;
-    using MiddleMan.Exceptions;
-    using MiddleMan.Interfaces;
-    using MiddleMan.Interfaces.Message;
+    using Exceptions;
+    using Interfaces;
+    using Interfaces.Message;
     using Query;
     using Query.Handlers;
     using Should;
@@ -27,6 +28,9 @@
                 new TestCommandHandler(),
                 new MultipleCommandHandler1(),
                 new MultipleCommandHandler2(),
+                new AsyncCommandHandler(),
+                new MultipleCommandHandlerAsync1(),
+                new MultipleCommandHandlerAsync2()
             };
             _broker = new MessageBroker(handlers);
         }
@@ -90,6 +94,22 @@
         }
 
         [Fact]
+        public async Task Finds_And_Executed_Async_Handler_For_Command()
+        {
+            // Given
+            var command = new TestAsyncCommand
+            {
+                HasBeenCalled = false
+            };
+
+            // When
+            await _broker.ProcessCommandAsync(command);
+
+            // Then
+            command.HasBeenCalled.ShouldBeTrue();
+        }   
+
+        [Fact]
         public void Throws_When_No_Command_Handler()
         {
             // Given
@@ -104,6 +124,20 @@
         }
 
         [Fact]
+        public async Task Throws_When_No_Async_Command_Handler()
+        {
+            // Given
+            var command = new NoHandlerCommandAsync();
+
+            // When
+            var ex = await Record.ExceptionAsync(() => _broker.ProcessCommandAsync(command));
+
+            // Then
+            ex.Message.ShouldEqual("No Async CommandHandler found for NoHandlerCommandAsync");
+            ex.ShouldBeType<NoHandlerException>();
+        }
+
+        [Fact]
         public void Throws_When_Multiple_Commands_Handlers()
         {
             // Given
@@ -114,6 +148,20 @@
 
             // Then
             ex.Message.ShouldEqual("2 CommandHandlers found for MultipleHandlerCommand");
+            ex.ShouldBeType<MultipleHandlersException>();
+        }
+
+        [Fact]
+        public async Task Throws_When_Multiple_Async_Commands_Handlers()
+        {
+            // Given
+            var command = new MultipleHandlerCommandAsync();
+
+            // When
+            var ex = await Record.ExceptionAsync(() => _broker.ProcessCommandAsync(command));
+
+            // Then
+            ex.Message.ShouldEqual("2 Async CommandHandlers found for MultipleHandlerCommandAsync");
             ex.ShouldBeType<MultipleHandlersException>();
         }
 

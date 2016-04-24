@@ -1,7 +1,7 @@
 ﻿namespace MiddleMan.Tests.Command
 {
     using System;
-    using MiddleMan.Interfaces.Command;
+    using Interfaces.Command;
 
     public class TestCommand : ICommand
     {

@@ -60,10 +60,16 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Command\Handlers\AsyncCommandHandler.cs" />
     <Compile Include="Command\Handlers\MultipleCommandHandler2.cs" />
     <Compile Include="Command\Handlers\MultipleCommandHandler1.cs" />
+    <Compile Include="Command\Handlers\MultipleCommandHandlerAsync1.cs" />
+    <Compile Include="Command\Handlers\MultipleCommandHandlerAsync2.cs" />
     <Compile Include="Command\MultipleHandlerCommand.cs" />
+    <Compile Include="Command\MultipleHandlerCommandAsync.cs" />
     <Compile Include="Command\NoHandlerCommand.cs" />
+    <Compile Include="Command\NoHandlerCommandAsync.cs" />
+    <Compile Include="Command\TestAsyncCommand.cs" />
     <Compile Include="Command\TestCommand.cs" />
     <Compile Include="Command\Handlers\TestCommandHandler.cs" />
     <Compile Include="Message\MessageChild.cs" />

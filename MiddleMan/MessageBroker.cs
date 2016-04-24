@@ -3,6 +3,7 @@ namespace MiddleMan
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Threading.Tasks;
     using Exceptions;
     using Interfaces;
     using Interfaces.Command;
@@ -48,6 +49,17 @@ namespace MiddleMan
             handler.HandleCommand((dynamic)command);
         }
 
+        public async Task ProcessCommandAsync(ICommand command)
+        {
+            var handlers = GetAsyncCommandHandlersAsync(command);
+
+            if (!handlers.Any())
+                throw new NoHandlerException($"No Async CommandHandler found for {command.GetType().Name}");
+
+            dynamic handler = handlers.First();
+            await handler.HandleCommandAsync((dynamic) command);
+        }
+
         public void SendMessage<T>(T message) where T : class, IMessage
         {
             foreach (var subsciber in _messageSubscibers)
@@ -73,6 +85,16 @@ namespace MiddleMan
                 .Where(p => p.GetType().GetInterfaces().Any(i =>
                     i.IsGenericType &&
                     i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) &&
+                    i.GetGenericArguments()[0] == command.GetType()))
+                .ToArray();
+        }
+
+        private IHandler[] GetAsyncCommandHandlersAsync(ICommand command)
+        {
+            return _handlers
+                .Where(p => p.GetType().GetInterfaces().Any(i =>
+                    i.IsGenericType &&
+                    i.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<>) &&
                     i.GetGenericArguments()[0] == command.GetType()))
                 .ToArray();
         }

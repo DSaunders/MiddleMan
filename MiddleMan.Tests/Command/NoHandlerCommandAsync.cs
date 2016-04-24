@@ -2,7 +2,7 @@
 {
     using Interfaces.Command;
 
-    public class NoHandlerCommand : ICommand
+    public class NoHandlerCommandAsync : ICommand
     {
         
     }
