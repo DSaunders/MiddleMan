@@ -3,11 +3,6 @@ namespace MiddleMan
     using System;
     using Interfaces.Message;
 
-    internal interface ISubscription
-    {
-        Type Type { get; }
-    };
-
     internal class Subscription<T> : ISubscription where T : IMessage
     {
         public Type Type { get; protected set; }

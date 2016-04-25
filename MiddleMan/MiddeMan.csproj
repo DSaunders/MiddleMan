@@ -51,6 +51,7 @@
     <Compile Include="Interfaces\Query\IQueryHandler.cs" />
     <Compile Include="IMessageBroker.cs" />
     <Compile Include="Interfaces\Query\IQueryHandlerAsync.cs" />
+    <Compile Include="ISubscription.cs" />
     <Compile Include="MessageBroker.cs" />
     <Compile Include="Exceptions\NoHandlerException.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

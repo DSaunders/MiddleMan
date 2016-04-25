@@ -60,7 +60,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Command\Handlers\AsyncCommandHandler.cs" />
+    <Compile Include="Command\Handlers\TestAsyncCommandHandler.cs" />
     <Compile Include="Command\Handlers\MultipleCommandHandler2.cs" />
     <Compile Include="Command\Handlers\MultipleCommandHandler1.cs" />
     <Compile Include="Command\Handlers\MultipleCommandHandlerAsync1.cs" />
