@@ -129,3 +129,7 @@ Dispatch a message to all subscribers:
 ```
 
 Subscibers to a message type will also receive notification of all messages that derive from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
+
+
+### Coming soon
+- Async message publishing/subscription
