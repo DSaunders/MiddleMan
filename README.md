@@ -17,7 +17,7 @@ Queries take an Query object and return a value.
 
 Queries are dispatched to a single handler. Multiple handlers for the same query will cause an exception to be thrown.
 
-Create a query object that implements `IQuery<T>` (where `T` is the type that the query should return):
+Create a class that implements `IQuery<T>` (where `T` is the type that the query should return):
 
 ```csharp
 public class MyQuery : IQuery<string>
@@ -128,7 +128,7 @@ Dispatch a message to all subscribers:
  await _broker.SendMessageAsync(new TestMessage { MessageText = "Hello, World" });
 ```
 
-Subscribers to a message type will also receive notification of all messages that derive from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
+Subscribers to a message type will also receive notification of all messages that _derive_ from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
 
 ## Pipelines
 
@@ -206,7 +206,7 @@ await _broker.RunPipelineAsync(new SomePipelineMessage());
 ## Manual IoC container setup
 
 If you are not using 'auto-discover' on your IoC container, you will need to register:
-- `Broker` -> `MiddleMan.Broker`.
+- `IBroker` -> `MiddleMan.Broker`.
 - All implementations of `IHandler` (both `IQuery<T>` and `ICommmand` implement this interface)
 - All implementations of `IPipelineTask` and `IPipeline` (if you are using pipelines)
 - All implementations of `IMessageSubscriber` (if you are using messages)
