@@ -65,6 +65,7 @@
     <Compile Include="Exceptions\NoHandlerException.cs" />
     <Compile Include="Pipeline\IPipeline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="TypeFactory.cs" />
   </ItemGroup>
   <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

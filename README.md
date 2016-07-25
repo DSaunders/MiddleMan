@@ -209,7 +209,7 @@ await _broker.RunPipelineAsync(new SomePipelineMessage());
 ### Manual IoC container setup
 
 If you are not using 'auto-discover' on your IoC container, you will need to register:
-- `Broker` -> `MiddleMan.Broker`. This should be a singleton.
+- `Broker` -> `MiddleMan.Broker`.
 - All implementations of `IHandler` (both `IQuery<T>` and `ICommmand` implement this interface)
 - All implementations of `IPipelineTask` and `IPipeline` (if you are using pipelines)
 - All implementations of `IMessageSubscriber` (if you are using messages)

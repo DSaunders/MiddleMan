@@ -1,6 +1,5 @@
 namespace MiddleMan
 {
-    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -14,31 +13,25 @@ namespace MiddleMan
 
     public class Broker : IBroker
     {
-        private readonly IEnumerable<IHandler> _handlers;
-        private readonly IEnumerable<IMessageSubscriber> _messageSubscribers;
-        private readonly IEnumerable<IPipelineTask> _pipelineTasks;
-        private readonly IEnumerable<IPipeline> _pipelines;
+        private readonly TypeFactory _factory;
 
         public Broker(IEnumerable<IHandler> handlers,
             IEnumerable<IMessageSubscriber> messageSubscribers,
             IEnumerable<IPipelineTask> pipelineTasks,
             IEnumerable<IPipeline> pipelines)
         {
-            _handlers = handlers;
-            _messageSubscribers = messageSubscribers;
-            _pipelineTasks = pipelineTasks;
-            _pipelines = pipelines;
+            _factory = new TypeFactory(handlers, messageSubscribers, pipelineTasks, pipelines);
         }
 
         public TOut ProcessQuery<TOut>(IQuery<TOut> query)
         {
-            var handlers = GetQueryHandlers(query);
+            var handlers = _factory.GetQueryHandlers(query);
 
             if (!handlers.Any())
                 throw new NoHandlerException($"No QueryHandler found for {query.GetType().Name}");
 
-            if (handlers.Length > 1)
-                throw new MultipleHandlersException($"{handlers.Length} QueryHandlers found for {query.GetType().Name}");
+            if (handlers.Count > 1)
+                throw new MultipleHandlersException($"{handlers.Count} QueryHandlers found for {query.GetType().Name}");
 
             // Can we do this by casting to the interface? Didn't work immediately, investigate.
             var handler = (dynamic)handlers.First();
@@ -47,13 +40,13 @@ namespace MiddleMan
 
         public Task<TOut> ProcessQueryAsync<TOut>(IQuery<TOut> query)
         {
-            var handlers = GetAsyncQueryHandlers(query);
+            var handlers = _factory.GetAsyncQueryHandlers(query);
 
             if (!handlers.Any())
                 throw new NoHandlerException($"No Async QueryHandler found for {query.GetType().Name}");
 
-            if (handlers.Length > 1)
-                throw new MultipleHandlersException($"{handlers.Length} Async QueryHandlers found for {query.GetType().Name}");
+            if (handlers.Count > 1)
+                throw new MultipleHandlersException($"{handlers.Count} Async QueryHandlers found for {query.GetType().Name}");
 
             var handler = (dynamic)handlers.First();
             return handler.HandleQueryAsync((dynamic)query);
@@ -62,13 +55,13 @@ namespace MiddleMan
 
         public void ProcessCommand(ICommand command)
         {
-            var handlers = GetCommandHandlers(command);
+            var handlers = _factory.GetCommandHandlers(command);
 
             if (!handlers.Any())
                 throw new NoHandlerException($"No CommandHandler found for {command.GetType().Name}");
 
-            if (handlers.Length > 1)
-                throw new MultipleHandlersException($"{handlers.Length} CommandHandlers found for {command.GetType().Name}");
+            if (handlers.Count > 1)
+                throw new MultipleHandlersException($"{handlers.Count} CommandHandlers found for {command.GetType().Name}");
 
             dynamic handler = handlers.First();
             handler.HandleCommand((dynamic)command);
@@ -76,14 +69,13 @@ namespace MiddleMan
 
         public async Task ProcessCommandAsync(ICommand command)
         {
-            var handlers = GetAsyncCommandHandlersAsync(command);
+            var handlers = _factory.GetAsyncCommandHandlers(command);
 
             if (!handlers.Any())
                 throw new NoHandlerException($"No Async CommandHandler found for {command.GetType().Name}");
-
-
-            if (handlers.Length > 1)
-                throw new MultipleHandlersException($"{handlers.Length} Async CommandHandlers found for {command.GetType().Name}");
+            
+            if (handlers.Count > 1)
+                throw new MultipleHandlersException($"{handlers.Count} Async CommandHandlers found for {command.GetType().Name}");
 
             dynamic handler = handlers.First();
             await handler.HandleCommandAsync((dynamic)command);
@@ -92,7 +84,7 @@ namespace MiddleMan
 
         public async Task SendMessageAsync<T>(T message) where T : class, IMessage
         {
-            var subscribers = GetAsyncMessageSubscribers(message);
+            var subscribers = _factory.GetAsyncMessageSubscribers(message);
 
             foreach (var subscriber in subscribers)
             {
@@ -104,7 +96,7 @@ namespace MiddleMan
 
         public void RunPipeline<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage
         {
-            var pipelines = GetPipelines(message);
+            var pipelines = _factory.GetPipelines(message);
 
             if (!pipelines.Any())
                 return;
@@ -118,7 +110,7 @@ namespace MiddleMan
             thisPipeline.GetPipelineTasks(builder);
 
             var taskTypes = builder.Get();
-            var tasks = taskTypes.Select(t => (IPipelineTask<TPipelineMessage>)GetPipelineHandler(t)).ToList();
+            var tasks = taskTypes.Select(t => (IPipelineTask<TPipelineMessage>)_factory.GetPipelineHandler(t)).ToList();
 
             for (var i = 0; i < tasks.Count - 1; i++)
             {
@@ -134,10 +126,10 @@ namespace MiddleMan
             // Run pipeline
             tasks.First().Run(message);
         }
-
+        
         public async Task RunPipelineAsync<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage
         {
-            var pipelines = GetAsyncPipelines(message);
+            var pipelines = _factory.GetAsyncPipelines(message);
 
             if (!pipelines.Any())
                 return;
@@ -151,7 +143,7 @@ namespace MiddleMan
             thisPipeline.GetPipelineTasks(builder);
 
             var taskTypes = builder.Get();
-            var tasks = taskTypes.Select(t => (IPipelineTaskAsync<TPipelineMessage>)GetPipelineHandler(t)).ToList();
+            var tasks = taskTypes.Select(t => (IPipelineTaskAsync<TPipelineMessage>)_factory.GetPipelineHandler(t)).ToList();
 
             for (var i = 0; i < tasks.Count - 1; i++)
             {
@@ -166,83 +158,6 @@ namespace MiddleMan
 
             // Run pipeline
             await tasks.First().Run(message).ConfigureAwait(false);
-        }
-
-        private IHandler[] GetCommandHandlers(ICommand command)
-        {
-            return _handlers
-                .Where(p => p.GetType().GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(ICommandHandler<>) &&
-                    i.GetGenericArguments()[0] == command.GetType()))
-                .ToArray();
-        }
-
-        private IHandler[] GetAsyncCommandHandlersAsync(ICommand command)
-        {
-            return _handlers
-                .Where(p => p.GetType().GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(ICommandHandlerAsync<>) &&
-                    i.GetGenericArguments()[0] == command.GetType()))
-                .ToArray();
-        }
-
-        private IHandler[] GetQueryHandlers<TOut>(IQuery<TOut> query)
-        {
-            return _handlers
-                .Where(p => p.GetType().GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>) &&
-                    i.GetGenericArguments()[0] == query.GetType() &&
-                    i.GetGenericArguments()[1] == typeof(TOut)))
-                .ToArray();
-        }
-
-        private IHandler[] GetAsyncQueryHandlers<TOut>(IQuery<TOut> query)
-        {
-            return _handlers
-                .Where(p => p.GetType().GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(IQueryHandlerAsync<,>) &&
-                    i.GetGenericArguments()[0] == query.GetType() &&
-                    i.GetGenericArguments()[1] == typeof(TOut)))
-                .ToArray();
-        }
-
-        private List<IMessageSubscriber> GetAsyncMessageSubscribers(IMessage message)
-        {
-            return _messageSubscribers
-                .Where(p => p.GetType().GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(IMessageSubscriber<>) &&
-                    i.GetGenericArguments()[0].IsInstanceOfType(message)))
-                .ToList();
-        }
-
-        private List<IPipeline> GetPipelines(IPipelineMessage message)
-        {
-            return _pipelines
-                .Where(p => p.GetType().GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(IPipeline<>) &&
-                    i.GetGenericArguments()[0] == message.GetType()))
-                    .ToList();
-        }
-
-        private List<IPipeline> GetAsyncPipelines(IPipelineMessage message)
-        {
-            return _pipelines
-                .Where(p => p.GetType().GetInterfaces().Any(i =>
-                    i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof(IPipelineAsync<>) &&
-                    i.GetGenericArguments()[0] == message.GetType()))
-                    .ToList();
-        }
-
-        private IPipelineTask GetPipelineHandler(Type pipelineTaskType)
-        {
-            return _pipelineTasks.FirstOrDefault(p => p.GetType() == pipelineTaskType);
         }
     }
 }
