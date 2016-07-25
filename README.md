@@ -1,20 +1,19 @@
 # MiddleMan
 
-A Command, Query and Message passing library that aids in using the mediator pattern. Shamelessly 'inspired' by Jimmy Bogard's [MediatR](https://github.com/jbogard/MediatR) (which you should probably use instead of this!).
+A library for abstracting your code into commands, queries, messages and pipelines.
 
-
-### Getting started
+## Getting started
 - Install via [Nuget]().
 - Create your Command and Query handlers (see below)
 - Take a dependency on `IBroker` to start passing commands/queries
 
-### Setup
+## Setup
 
 MiddleMan is designed to make configuration easier by allowing you to implement interfaces for everything and have it 'just work'. This works best when your container auto-registers everything for you, and supports multiple concrete types for a given interface.
 
 If you need to register your dependencies manually, see 'Manual IoC container setup'.
 
-### Queries
+## Queries
 
 Queries take an Query object and return a value.
 
@@ -67,7 +66,7 @@ public class MyQueryHandler : IQueryHandlerAsync<MyQuery, string>
 var result = await _broker.ProcessQueryAsync(new MyQuery { Name = "Dave" });
 ```
 
-### Commands
+## Commands
 A Command is the same as a Query, but just doesn't return a result.
 
 Just like Queries, only one Command handler can exist per command type.
@@ -102,7 +101,7 @@ public class TestAsyncCommandHandler : ICommandHandlerAsync<TestCommand>
 await _broker.ProcessCommandAsync(command);
 ```
 
-### Messages
+## Messages
 
 Unlike Commands and Queries, Messages can be dispatched to multiple subscribers.
 
@@ -133,7 +132,7 @@ Dispatch a message to all subscribers:
 
 Subscribers to a message type will also receive notification of all messages that derive from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
 
-### Pipelines
+## Pipelines
 
 A pipeline runs a sequence of actions, in order, against a given message.
 
@@ -206,7 +205,7 @@ public class SomePipelineAsync : IPipelineAsync<SomePipelineMessage>
 await _broker.RunPipelineAsync(new SomePipelineMessage());
 ```
 
-### Manual IoC container setup
+## Manual IoC container setup
 
 If you are not using 'auto-discover' on your IoC container, you will need to register:
 - `Broker` -> `MiddleMan.Broker`.
