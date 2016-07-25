@@ -49,15 +49,21 @@
     <Compile Include="Command\ICommand.cs" />
     <Compile Include="Message\IMessage.cs" />
     <Compile Include="Message\IMessageSubscriber.cs" />
+    <Compile Include="Pipeline\IPipelineAsync.cs" />
     <Compile Include="Pipeline\IPipelineMessage.cs" />
-    <Compile Include="Pipeline\IPipelineTask.cs" />
+    <Compile Include="Pipeline\Builder\PipelineBuilderAsync.cs" />
+    <Compile Include="Pipeline\Tasks\IPipelineTask.cs" />
+    <Compile Include="Pipeline\Tasks\IPipelineTaskAsync.cs" />
+    <Compile Include="Pipeline\Builder\PipelineBuilder.cs" />
+    <Compile Include="Pipeline\Tasks\PipelineTaskBase.cs" />
+    <Compile Include="Pipeline\Tasks\PipelineTaskBaseAsync.cs" />
     <Compile Include="Query\IQuery.cs" />
     <Compile Include="Query\IQueryHandler.cs" />
     <Compile Include="IBroker.cs" />
     <Compile Include="Query\IQueryHandlerAsync.cs" />
     <Compile Include="Broker.cs" />
     <Compile Include="Exceptions\NoHandlerException.cs" />
-    <Compile Include="Pipeline\PipelineBuilder.cs" />
+    <Compile Include="Pipeline\IPipeline.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />

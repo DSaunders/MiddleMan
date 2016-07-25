@@ -6,7 +6,10 @@
     using Message.Subscriber;
     using MiddleMan.Message;
     using MiddleMan.Pipeline;
-    using Pipeline;
+    using MiddleMan.Pipeline.Tasks;
+    using Pipeline.Async;
+    using Pipeline.MultiplePipelines;
+    using Pipeline.Sync;
     using Query.Handlers;
 
     public partial class MessageBrokerTests
@@ -31,12 +34,6 @@
                 new MultipleCommandHandlerAsync2()
             };
 
-            var pipelineTasks = new List<IPipelineTask>
-            {
-                new PipelineTaskFoo(),
-                new PipelineTaskBar()
-            };
-
             var subscribers = new List<IMessageSubscriber>
             {
                 new MessageChildSubscriber(),
@@ -46,7 +43,25 @@
                 new TestMessageSubscriberBar()
             };
 
-            _broker = new Broker(handlers, subscribers, pipelineTasks);
+            var pipelineTasks = new List<IPipelineTask>
+            {
+                new FooBarPipelineTaskFoo(),
+                new FooBarPipelineTaskBar(),
+                new FooBarPipelineTaskFooAsync(),
+                new FooBarPipelineTaskBarAsync(),
+            };
+
+            var pipelines = new List<IPipeline>
+            {
+                new FooBarPipeline(),
+                new FooBarPipelineAsync(),
+                new MultiplePipelineMessagePipeline1(),
+                new MultiplePipelineMessagePipeline2(),
+                new MultiplePipelineMessagePipelineAsync1(),
+                new MultiplePipelineMessagePipelineAsync2(),
+            };
+
+            _broker = new Broker(handlers, subscribers, pipelineTasks, pipelines);
         }
     }
 }

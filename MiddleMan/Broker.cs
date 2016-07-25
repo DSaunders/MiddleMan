@@ -8,6 +8,8 @@ namespace MiddleMan
     using Exceptions;
     using Message;
     using Pipeline;
+    using Pipeline.Builder;
+    using Pipeline.Tasks;
     using Query;
 
     public class Broker : IBroker
@@ -15,28 +17,27 @@ namespace MiddleMan
         private readonly IEnumerable<IHandler> _handlers;
         private readonly IEnumerable<IMessageSubscriber> _messageSubscribers;
         private readonly IEnumerable<IPipelineTask> _pipelineTasks;
+        private readonly IEnumerable<IPipeline> _pipelines;
 
-        private readonly IDictionary<Type, PipelineBuilder> _pipelines;
-
-        public Broker(IEnumerable<IHandler> handlers, 
+        public Broker(IEnumerable<IHandler> handlers,
             IEnumerable<IMessageSubscriber> messageSubscribers,
-            IEnumerable<IPipelineTask> pipelineTasks)
+            IEnumerable<IPipelineTask> pipelineTasks,
+            IEnumerable<IPipeline> pipelines)
         {
             _handlers = handlers;
             _messageSubscribers = messageSubscribers;
             _pipelineTasks = pipelineTasks;
-            _pipelines = new Dictionary<Type, PipelineBuilder>();
+            _pipelines = pipelines;
         }
-
 
         public TOut ProcessQuery<TOut>(IQuery<TOut> query)
         {
             var handlers = GetQueryHandlers(query);
-           
+
             if (!handlers.Any())
                 throw new NoHandlerException($"No QueryHandler found for {query.GetType().Name}");
-            
-            if (handlers.Length >1 )
+
+            if (handlers.Length > 1)
                 throw new MultipleHandlersException($"{handlers.Length} QueryHandlers found for {query.GetType().Name}");
 
             // Can we do this by casting to the interface? Didn't work immediately, investigate.
@@ -85,47 +86,87 @@ namespace MiddleMan
                 throw new MultipleHandlersException($"{handlers.Length} Async CommandHandlers found for {command.GetType().Name}");
 
             dynamic handler = handlers.First();
-            await handler.HandleCommandAsync((dynamic) command);
+            await handler.HandleCommandAsync((dynamic)command);
         }
 
 
         public async Task SendMessageAsync<T>(T message) where T : class, IMessage
         {
-            var subscribers = GetMessageSubscribers(message);
+            var subscribers = GetAsyncMessageSubscribers(message);
 
             foreach (var subscriber in subscribers)
             {
                 dynamic dynamicSubscriber = subscriber;
-                await dynamicSubscriber.OnMessageReceived(message);
+                await dynamicSubscriber.OnMessageReceived(message).ConfigureAwait(false);
             }
         }
 
 
-        public void ConstructPipeline<TPipelineMessage>(Action<PipelineBuilder<TPipelineMessage>> action) where TPipelineMessage : class, IPipelineMessage
+        public void RunPipeline<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage
         {
-            var messageType = typeof (TPipelineMessage);
+            var pipelines = GetPipelines(message);
 
-            if (_pipelines.ContainsKey(messageType))
-                throw new MultiplePipelinesException("A pipeline already exists to handle this PipelineMessage type");
+            if (!pipelines.Any())
+                return;
 
-            var pipeline = new PipelineBuilder<TPipelineMessage>();
-            action(pipeline);
-            _pipelines.Add(typeof(TPipelineMessage), pipeline);
+            if (pipelines.Count > 1)
+                throw new MultiplePipelinesException($"{pipelines.Count} Pipelines found for {message.GetType().Name}");
+            
+            dynamic thisPipeline = pipelines.First();
+
+            var builder = new PipelineBuilder<TPipelineMessage>();
+            thisPipeline.GetPipelineTasks(builder);
+
+            var taskTypes = builder.Get();
+            var tasks = taskTypes.Select(t => (IPipelineTask<TPipelineMessage>)GetPipelineHandler(t)).ToList();
+
+            for (var i = 0; i < tasks.Count - 1; i++)
+            {
+                var thisTask = tasks[i];
+                var nextTask = tasks[i + 1];
+
+                thisTask.Setup(nextTask.Run);
+            }
+
+            // Noop last task
+            tasks.Last().Setup(m => { });
+
+            // Run pipeline
+            tasks.First().Run(message);
         }
 
         public async Task RunPipelineAsync<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage
         {
-            var pipeline = _pipelines[message.GetType()];
+            var pipelines = GetAsyncPipelines(message);
 
-            var types = pipeline.GetPipelineTaskTypesInOrder();
+            if (!pipelines.Any())
+                return;
 
-            foreach (var pipelineTaskType in types)
+            if (pipelines.Count > 1)
+                throw new MultiplePipelinesException($"{pipelines.Count} Async Pipelines found for {message.GetType().Name}");
+
+            dynamic thisPipeline = pipelines.First();
+
+            var builder = new PipelineBuilderAsync<TPipelineMessage>();
+            thisPipeline.GetPipelineTasks(builder);
+
+            var taskTypes = builder.Get();
+            var tasks = taskTypes.Select(t => (IPipelineTaskAsync<TPipelineMessage>)GetPipelineHandler(t)).ToList();
+
+            for (var i = 0; i < tasks.Count - 1; i++)
             {
-                var instance = (IPipelineTask<TPipelineMessage>)GetAsyncPipelineHandler(pipelineTaskType);
-                await instance.Run(message);
-            }
-        }
+                var thisTask = tasks[i];
+                var nextTask = tasks[i + 1];
 
+                thisTask.Setup(nextTask.Run);
+            }
+
+            // Noop last task
+            tasks.Last().Setup(m => Task.FromResult(0));
+
+            // Run pipeline
+            await tasks.First().Run(message).ConfigureAwait(false);
+        }
 
         private IHandler[] GetCommandHandlers(ICommand command)
         {
@@ -152,9 +193,9 @@ namespace MiddleMan
             return _handlers
                 .Where(p => p.GetType().GetInterfaces().Any(i =>
                     i.IsGenericType &&
-                    i.GetGenericTypeDefinition() == typeof (IQueryHandler<,>) &&
+                    i.GetGenericTypeDefinition() == typeof(IQueryHandler<,>) &&
                     i.GetGenericArguments()[0] == query.GetType() &&
-                    i.GetGenericArguments()[1] == typeof (TOut)))
+                    i.GetGenericArguments()[1] == typeof(TOut)))
                 .ToArray();
         }
 
@@ -169,20 +210,39 @@ namespace MiddleMan
                 .ToArray();
         }
 
-        private IEnumerable<IMessageSubscriber> GetMessageSubscribers(IMessage message)
+        private List<IMessageSubscriber> GetAsyncMessageSubscribers(IMessage message)
         {
             return _messageSubscribers
                 .Where(p => p.GetType().GetInterfaces().Any(i =>
                     i.IsGenericType &&
                     i.GetGenericTypeDefinition() == typeof(IMessageSubscriber<>) &&
                     i.GetGenericArguments()[0].IsInstanceOfType(message)))
-                .ToArray();
+                .ToList();
         }
 
-        private IPipelineTask GetAsyncPipelineHandler(Type pipelineTaskType)
+        private List<IPipeline> GetPipelines(IPipelineMessage message)
         {
-            return _pipelineTasks
-                .FirstOrDefault(p => p.GetType() == pipelineTaskType);
+            return _pipelines
+                .Where(p => p.GetType().GetInterfaces().Any(i =>
+                    i.IsGenericType &&
+                    i.GetGenericTypeDefinition() == typeof(IPipeline<>) &&
+                    i.GetGenericArguments()[0] == message.GetType()))
+                    .ToList();
+        }
+
+        private List<IPipeline> GetAsyncPipelines(IPipelineMessage message)
+        {
+            return _pipelines
+                .Where(p => p.GetType().GetInterfaces().Any(i =>
+                    i.IsGenericType &&
+                    i.GetGenericTypeDefinition() == typeof(IPipelineAsync<>) &&
+                    i.GetGenericArguments()[0] == message.GetType()))
+                    .ToList();
+        }
+
+        private IPipelineTask GetPipelineHandler(Type pipelineTaskType)
+        {
+            return _pipelineTasks.FirstOrDefault(p => p.GetType() == pipelineTaskType);
         }
     }
 }

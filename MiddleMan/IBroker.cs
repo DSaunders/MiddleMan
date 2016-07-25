@@ -1,6 +1,5 @@
 ﻿namespace MiddleMan
 {
-    using System;
     using System.Threading.Tasks;
     using Command;
     using Message;
@@ -16,8 +15,8 @@
         Task ProcessCommandAsync(ICommand command);
 
         Task SendMessageAsync<T>(T message) where T : class, IMessage;
-        
-        void ConstructPipeline<TPipelineMessage>(Action<PipelineBuilder<TPipelineMessage>> action) where TPipelineMessage : class, IPipelineMessage;
+
+        void RunPipeline<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage;
         Task RunPipelineAsync<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage;
     }
 }

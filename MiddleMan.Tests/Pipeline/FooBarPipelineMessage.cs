@@ -3,11 +3,11 @@
     using System.Collections.Generic;
     using MiddleMan.Pipeline;
 
-    public class PipelineMessage : IPipelineMessage
+    public class FooBarPipelineMessage : IPipelineMessage
     {
         public IList<string> TasksRun { get; set; }
 
-        public PipelineMessage()
+        public FooBarPipelineMessage()
         {
             TasksRun = new List<string>();
         }
