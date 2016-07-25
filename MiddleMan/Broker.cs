@@ -89,14 +89,14 @@ namespace MiddleMan
         }
 
 
-        public void SendMessage<T>(T message) where T : class, IMessage
+        public async Task SendMessageAsync<T>(T message) where T : class, IMessage
         {
             var subscribers = GetMessageSubscribers(message);
 
             foreach (var subscriber in subscribers)
             {
                 dynamic dynamicSubscriber = subscriber;
-                dynamicSubscriber.OnMessageReceived(message);
+                await dynamicSubscriber.OnMessageReceived(message);
             }
         }
 

@@ -1,10 +1,11 @@
 namespace MiddleMan.Tests.Message
 {
+    using System.Threading.Tasks;
     using MiddleMan.Message;
 
     public class TestMessageSubscriberFoo : IMessageSubscriber<TestMessage>
     {
-        public void OnMessageReceived(TestMessage message)
+        public async Task OnMessageReceived(TestMessage message)
         {
             message.Subscribers.Add("Foo");
         }

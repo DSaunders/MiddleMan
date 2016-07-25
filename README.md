@@ -121,7 +121,7 @@ Define subscribers to messages like so:
 ```csharp
 public class TestMessageLogger : IMessageSubscriber<TestMessage>
 {
-    public void OnMessageReceived(TestMessage message)
+    public async Task OnMessageReceived(TestMessage message)
     {
         Log.Info(message.MessageText);
     }
@@ -130,7 +130,7 @@ public class TestMessageLogger : IMessageSubscriber<TestMessage>
 
 Dispatch a message to all subscribers:
 ```csharp
- _broker.SendMessage(new TestMessage { MessageText = "Hello, World" });
+ await _broker.SendMessageAsync(new TestMessage { MessageText = "Hello, World" });
 ```
 
 Subscribers to a message type will also receive notification of all messages that derive from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
@@ -169,5 +169,9 @@ _broker.ConstructPipeline<PipelineMessage>(p =>
 
 You can then call the pipeline for your message in a single line. MiddleMan will find the correct pipeline
 to handle the message you pass it.
+
+```csharp
+await _broker.RunPipelineAsync(new SomePipelineMessage());
+```
 
 If there are no pipelines registered for the type of message you pass to the broker, the message will simply be ignored.
