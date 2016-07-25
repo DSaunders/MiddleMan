@@ -17,7 +17,7 @@
 
     public class MessageBrokerTests
     {
-        private readonly IMessageBroker _broker;
+        private readonly IBroker _broker;
 
         public MessageBrokerTests()
         {
@@ -43,7 +43,16 @@
                 new PipelineTaskBar()
             };
 
-            _broker = new MessageBroker(handlers, pipelineTasks);
+            var subscibers = new List<IMessageSubscriber>
+            {
+                new MessageChildSubscriber(),
+                new MessageParentSubscriber(),
+                new SomeOtherMessageSubscriberThatThrows(),
+                new TestMessageSubscriberFoo(),
+                new TestMessageSubscriberBar()
+            };
+
+            _broker = new Broker(handlers, subscibers, pipelineTasks);
         }
 
         [Fact]
@@ -222,127 +231,60 @@
         public void Dispatches_Messages_To_Subscribers()
         {
             // Arrange
-            var message = new TestMessage("Hello, World!");
-
-            var subscriber1Message = string.Empty;
-            _broker.SubscribeToMessage<TestMessage>(m =>
-            {
-                subscriber1Message = m.MessageText;
-            });
-
-            var subscriber2Message = string.Empty;
-            _broker.SubscribeToMessage<TestMessage>(m =>
-            {
-                subscriber2Message = m.MessageText;
-            });
+            var subscribersCalled = new List<string>();
+            var message = new TestMessage("Hello, World!", subscribersCalled);
 
             // Act
             _broker.SendMessage(message);
 
             // Assert
-            subscriber1Message.ShouldEqual("Hello, World!");
-            subscriber2Message.ShouldEqual("Hello, World!");
+            subscribersCalled.Count.ShouldEqual(2);
+            subscribersCalled.ShouldContain("Foo");
+            subscribersCalled.ShouldContain("Bar");
         }
 
         [Fact]
         public void Does_Not_Dispatch_To_Other_Subscribers()
         {
             // Arrange
-            var message = new TestMessage("Hello, World!");
+            var message = new TestMessage("Hello, World!", new List<string>());
             
-            var subscriber1Message = string.Empty;
-            _broker.SubscribeToMessage<TestMessage>(m =>
-            {
-                subscriber1Message = m.MessageText;
-            });
-
-            var subscriber2Message = string.Empty;
-            _broker.SubscribeToMessage<MessageChild>(m =>
-            {
-                subscriber2Message = m.MessageText;
-            });
-
             // Act
             _broker.SendMessage(message);
 
             // Assert
-            subscriber1Message.ShouldEqual("Hello, World!");
-            subscriber2Message.ShouldBeEmpty();
+            // If all subscribers are called, one of them throws an exception so this test will fail
         }
 
         [Fact]
         public void Dispatches_Messages_To_Subscribers_Who_Subscribe_To_Ancestor_MessageType()
         {
             // Arrange
-            var message = new MessageChild("Child Message");
-
-            var parentMessage = string.Empty;
-            _broker.SubscribeToMessage<MessageParent>(m =>
-            {
-                parentMessage = m.MessageText;
-            });
-
-            var childMessage = string.Empty;
-            _broker.SubscribeToMessage<MessageChild>(m =>
-            {
-                childMessage = m.MessageText;
-            });
-
+            var subscribersHit = new List<string>();
+            var message = new MessageChild("Child Message", subscribersHit);
+            
             // Act
             _broker.SendMessage(message);
 
             // Assert
-            parentMessage.ShouldEqual("Child Message");
-            childMessage.ShouldEqual("Child Message");
+            subscribersHit.Count.ShouldEqual(2);
+            subscribersHit.ShouldContain("MessageParent");
+            subscribersHit.ShouldContain("MessageChild");
         }
 
         [Fact]
         public void Does_Not_Dispatch_Messages_To_Subscribers_Who_Subscribe_To_Derived_MessageTypes()
         {
             // Arrange
-            var message = new MessageParent("Parent Message");
-
-            var parentMessage = string.Empty;
-            _broker.SubscribeToMessage<MessageParent>(m =>
-            {
-                parentMessage = m.MessageText;
-            });
-
-            var childMessage = string.Empty;
-            _broker.SubscribeToMessage<MessageChild>(m =>
-            {
-                childMessage = m.MessageText;
-            });
+            var subscribersHit = new List<string>();
+            var message = new MessageParent("Parent Message", subscribersHit);
 
             // Act
             _broker.SendMessage(message);
 
             // Assert
-            parentMessage.ShouldEqual("Parent Message");
-            childMessage.ShouldBeEmpty();
-        }
-
-        [Fact]
-        public void Allows_Subscription_To_All_Messages()
-        {
-            // Arrange
-            var testMessage = new TestMessage("Hello, World!");
-            var childMessage = new MessageChild("Hello, World!");
-
-            var messagesRecieved = new List<IMessage>();
-            _broker.SubscribeToAllMessages(m =>
-            {
-                messagesRecieved.Add(m);
-            });
-            
-            // Act
-            _broker.SendMessage(testMessage);
-            _broker.SendMessage(childMessage);
-
-            // Assert
-            messagesRecieved.ShouldContain(testMessage);
-            messagesRecieved.ShouldContain(childMessage);
-            messagesRecieved.Count.ShouldEqual(2);
+            subscribersHit.Count.ShouldEqual(1);
+            subscribersHit.ShouldContain("MessageParent");
         }
 
         [Fact]

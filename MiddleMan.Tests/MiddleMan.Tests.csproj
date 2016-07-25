@@ -72,9 +72,15 @@
     <Compile Include="Command\TestAsyncCommand.cs" />
     <Compile Include="Command\TestCommand.cs" />
     <Compile Include="Command\Handlers\TestCommandHandler.cs" />
+    <Compile Include="Message\MessageChildSubscriber.cs" />
+    <Compile Include="Message\MessageParentSubscriber.cs" />
+    <Compile Include="Message\SomeOtherMessage.cs" />
+    <Compile Include="Message\SomeOtherMessageSubscriberThatThrows.cs" />
+    <Compile Include="Message\TestMessageSubscriberBar.cs" />
     <Compile Include="Message\MessageChild.cs" />
     <Compile Include="Message\MessageParent.cs" />
     <Compile Include="Message\TestMessage.cs" />
+    <Compile Include="Message\TestMessageSubscriberFoo.cs" />
     <Compile Include="Pipeline\PipelineMessage.cs" />
     <Compile Include="Pipeline\PipelineTaskBar.cs" />
     <Compile Include="Pipeline\PipelineTaskFoo.cs" />

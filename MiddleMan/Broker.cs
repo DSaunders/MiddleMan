@@ -10,19 +10,21 @@ namespace MiddleMan
     using Pipeline;
     using Query;
 
-    public class MessageBroker : IMessageBroker
+    public class Broker : IBroker
     {
         private readonly IEnumerable<IHandler> _handlers;
+        private readonly IEnumerable<IMessageSubscriber> _messageSubscribers;
         private readonly IEnumerable<IPipelineTask> _pipelineTasks;
-        private readonly IList<ISubscription> _messageSubscibers;
 
         private readonly IDictionary<Type, PipelineBuilder> _pipelines;
 
-        public MessageBroker(IEnumerable<IHandler> handlers, IEnumerable<IPipelineTask> pipelineTasks)
+        public Broker(IEnumerable<IHandler> handlers, 
+            IEnumerable<IMessageSubscriber> messageSubscribers,
+            IEnumerable<IPipelineTask> pipelineTasks)
         {
             _handlers = handlers;
+            _messageSubscribers = messageSubscribers;
             _pipelineTasks = pipelineTasks;
-            _messageSubscibers = new List<ISubscription>();
             _pipelines = new Dictionary<Type, PipelineBuilder>();
         }
 
@@ -89,21 +91,13 @@ namespace MiddleMan
 
         public void SendMessage<T>(T message) where T : class, IMessage
         {
-            foreach (var subsciber in _messageSubscibers)
+            var subscribers = GetMessageSubscribers(message);
+
+            foreach (var subscriber in subscribers)
             {
-                if (subsciber.Type.IsInstanceOfType(message))
-                    ((dynamic)subsciber).Action((dynamic)message);
+                dynamic dynamicSubscriber = subscriber;
+                dynamicSubscriber.OnMessageReceived(message);
             }
-        }
-
-        public void SubscribeToMessage<T>(Action<T> messageCallback) where T: class, IMessage
-        {
-            _messageSubscibers.Add(new Subscription<T>(messageCallback));
-        }
-
-        public void SubscribeToAllMessages(Action<IMessage> messageCallback)
-        {
-            _messageSubscibers.Add(new Subscription<IMessage>(messageCallback));
         }
 
 
@@ -172,6 +166,16 @@ namespace MiddleMan
                     i.GetGenericTypeDefinition() == typeof(IQueryHandlerAsync<,>) &&
                     i.GetGenericArguments()[0] == query.GetType() &&
                     i.GetGenericArguments()[1] == typeof(TOut)))
+                .ToArray();
+        }
+
+        private IEnumerable<IMessageSubscriber> GetMessageSubscribers(IMessage message)
+        {
+            return _messageSubscribers
+                .Where(p => p.GetType().GetInterfaces().Any(i =>
+                    i.IsGenericType &&
+                    i.GetGenericTypeDefinition() == typeof(IMessageSubscriber<>) &&
+                    i.GetGenericArguments()[0].IsInstanceOfType(message)))
                 .ToArray();
         }
 

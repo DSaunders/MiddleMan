@@ -6,14 +6,15 @@ A Command, Query and Message passing library that aids in using the mediator pat
 ### Getting started
 - Install via [Nuget]().
 - Create your Command and Query handlers (see below)
-- Take a dependency on `IMessageBroker` to start passing commands/queries
+- Take a dependency on `IBroker` to start passing commands/queries
 
 ### IoC container setup
 
 If you are not using 'auto-discover' on your IoC container, you will need to register:
-- `IMessageBroker` -> `MiddleMan.MessageBroker`. This should be a singleton.
+- `Broker` -> `MiddleMan.Broker`. This should be a singleton.
 - All implementations of `IHandler` (both `IQuery<T>` and `ICommmand` implement this interface)
 - All implementations of `IPipelineTask` (if you are using pipelines)
+- All implementations of `IMessageSubscriber` (if you are using messages)
 
 ### Queries
 
@@ -41,7 +42,7 @@ public class MyQueryHandler : IQueryHandler<MyQuery, string>
 }
 ```
 
-Then just call `IMessageBroker` with an instance of the query:
+Then just call `IBroker` with an instance of the query:
 
 ```csharp
 var result = _broker.ProcessQuery(new MyQuery { Name = "Dave" });
@@ -116,12 +117,15 @@ public class TestMessage : IMessage
 }
 ```
 
-Subscribe to the message like so:
+Define subscribers to messages like so:
 ```csharp
-_broker.SubscribeToMessage<TestMessage>(m =>
+public class TestMessageLogger : IMessageSubscriber<TestMessage>
 {
-    Console.WriteLine(m.MessageText);
-});
+    public void OnMessageReceived(TestMessage message)
+    {
+        Log.Info(message.MessageText);
+    }
+}
 ```
 
 Dispatch a message to all subscribers:
@@ -129,11 +133,11 @@ Dispatch a message to all subscribers:
  _broker.SendMessage(new TestMessage { MessageText = "Hello, World" });
 ```
 
-Subscibers to a message type will also receive notification of all messages that derive from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
+Subscribers to a message type will also receive notification of all messages that derive from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
 
 ### Pipelines
 
-Runs a sequence of actions against a given message.
+A pipeline runs a sequence of actions, in order, against a given message.
 
 Firstly, create a message to be passed along the pipeline, this should implement `IPipelineMessage`:
 ```csharp
