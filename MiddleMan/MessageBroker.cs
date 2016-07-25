@@ -4,21 +4,26 @@ namespace MiddleMan
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
+    using Command;
     using Exceptions;
-    using Interfaces;
-    using Interfaces.Command;
-    using Interfaces.Message;
-    using Interfaces.Query;
+    using Message;
+    using Pipeline;
+    using Query;
 
     public class MessageBroker : IMessageBroker
     {
         private readonly IEnumerable<IHandler> _handlers;
+        private readonly IEnumerable<IPipelineTask> _pipelineTasks;
         private readonly IList<ISubscription> _messageSubscibers;
 
-        public MessageBroker(IEnumerable<IHandler> handlers)
+        private readonly IDictionary<Type, PipelineBuilder> _pipelines;
+
+        public MessageBroker(IEnumerable<IHandler> handlers, IEnumerable<IPipelineTask> pipelineTasks)
         {
             _handlers = handlers;
+            _pipelineTasks = pipelineTasks;
             _messageSubscibers = new List<ISubscription>();
+            _pipelines = new Dictionary<Type, PipelineBuilder>();
         }
 
 
@@ -51,6 +56,7 @@ namespace MiddleMan
             return handler.HandleQueryAsync((dynamic)query);
         }
 
+
         public void ProcessCommand(ICommand command)
         {
             var handlers = GetCommandHandlers(command);
@@ -80,6 +86,7 @@ namespace MiddleMan
             await handler.HandleCommandAsync((dynamic) command);
         }
 
+
         public void SendMessage<T>(T message) where T : class, IMessage
         {
             foreach (var subsciber in _messageSubscibers)
@@ -97,6 +104,32 @@ namespace MiddleMan
         public void SubscribeToAllMessages(Action<IMessage> messageCallback)
         {
             _messageSubscibers.Add(new Subscription<IMessage>(messageCallback));
+        }
+
+
+        public void ConstructPipeline<TPipelineMessage>(Action<PipelineBuilder<TPipelineMessage>> action) where TPipelineMessage : class, IPipelineMessage
+        {
+            var messageType = typeof (TPipelineMessage);
+
+            if (_pipelines.ContainsKey(messageType))
+                throw new MultiplePipelinesException("A pipeline already exists to handle this PipelineMessage type");
+
+            var pipeline = new PipelineBuilder<TPipelineMessage>();
+            action(pipeline);
+            _pipelines.Add(typeof(TPipelineMessage), pipeline);
+        }
+
+        public async Task RunPipelineAsync<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage
+        {
+            var pipeline = _pipelines[message.GetType()];
+
+            var types = pipeline.GetPipelineTaskTypesInOrder();
+
+            foreach (var pipelineTaskType in types)
+            {
+                var instance = (IPipelineTask<TPipelineMessage>)GetAsyncPipelineHandler(pipelineTaskType);
+                await instance.Run(message);
+            }
         }
 
 
@@ -140,6 +173,12 @@ namespace MiddleMan
                     i.GetGenericArguments()[0] == query.GetType() &&
                     i.GetGenericArguments()[1] == typeof(TOut)))
                 .ToArray();
+        }
+
+        private IPipelineTask GetAsyncPipelineHandler(Type pipelineTaskType)
+        {
+            return _pipelineTasks
+                .FirstOrDefault(p => p.GetType() == pipelineTaskType);
         }
     }
 }

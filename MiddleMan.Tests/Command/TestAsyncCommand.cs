@@ -1,6 +1,6 @@
 ﻿namespace MiddleMan.Tests.Command
 {
-    using Interfaces.Command;
+    using MiddleMan.Command;
 
     public class TestAsyncCommand : ICommand
     {

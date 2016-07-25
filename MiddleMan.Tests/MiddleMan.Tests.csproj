@@ -75,6 +75,9 @@
     <Compile Include="Message\MessageChild.cs" />
     <Compile Include="Message\MessageParent.cs" />
     <Compile Include="Message\TestMessage.cs" />
+    <Compile Include="Pipeline\PipelineMessage.cs" />
+    <Compile Include="Pipeline\PipelineTaskBar.cs" />
+    <Compile Include="Pipeline\PipelineTaskFoo.cs" />
     <Compile Include="Query\Handlers\MultipleHandler1.cs" />
     <Compile Include="Query\Handlers\MultipleHandlerAsync1.cs" />
     <Compile Include="Query\Handlers\MultipleHandlerAsync2.cs" />

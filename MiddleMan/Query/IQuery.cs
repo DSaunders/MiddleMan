@@ -1,4 +1,4 @@
-﻿namespace MiddleMan.Interfaces.Query
+﻿namespace MiddleMan.Query
 {
     public interface IQuery<TOutput>
     {

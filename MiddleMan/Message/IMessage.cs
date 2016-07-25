@@ -1,4 +1,4 @@
-﻿namespace MiddleMan.Interfaces.Message
+﻿namespace MiddleMan.Message
 {
     public interface IMessage
     {

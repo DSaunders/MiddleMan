@@ -1,4 +1,4 @@
-namespace MiddleMan.Interfaces.Command
+namespace MiddleMan.Command
 {
     public interface ICommandHandler<in TCommand> : IHandler
             where TCommand : ICommand

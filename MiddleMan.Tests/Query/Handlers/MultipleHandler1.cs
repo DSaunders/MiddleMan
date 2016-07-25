@@ -1,6 +1,6 @@
 namespace MiddleMan.Tests.Query.Handlers
 {
-    using MiddleMan.Interfaces.Query;
+    using MiddleMan.Query;
 
     public class MultipleHandler1 : IQueryHandler<MultipleHandlerQuery, string>
     {

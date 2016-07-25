@@ -1,6 +1,6 @@
 ﻿namespace MiddleMan.Tests.Query
 {
-    using MiddleMan.Interfaces.Query;
+    using MiddleMan.Query;
 
     public class TestQuery : IQuery<string>
     {

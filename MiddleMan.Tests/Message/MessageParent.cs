@@ -1,6 +1,6 @@
 ﻿namespace MiddleMan.Tests.Message
 {
-    using MiddleMan.Interfaces.Message;
+    using MiddleMan.Message;
 
     public class MessageParent : IMessage
     {

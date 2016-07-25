@@ -1,4 +1,4 @@
-namespace MiddleMan.Interfaces.Command
+namespace MiddleMan.Command
 {
     public interface ICommand
     {

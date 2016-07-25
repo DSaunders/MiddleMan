@@ -1,7 +1,7 @@
 ﻿namespace MiddleMan.Tests.Query.Handlers
 {
     using System.Threading.Tasks;
-    using Interfaces.Query;
+    using MiddleMan.Query;
 
     public class TestQueryHandlerAsync : IQueryHandlerAsync<TestQueryAsync, string>
     {

@@ -11,8 +11,9 @@ A Command, Query and Message passing library that aids in using the mediator pat
 ### IoC container setup
 
 If you are not using 'auto-discover' on your IoC container, you will need to register:
-- `IMessageBroker` -> `MiddleMan.MessageBroker`
+- `IMessageBroker` -> `MiddleMan.MessageBroker`. This should be a singleton.
 - All implementations of `IHandler` (both `IQuery<T>` and `ICommmand` implement this interface)
+- All implementations of `IPipelineTask` (if you are using pipelines)
 
 ### Queries
 
@@ -130,6 +131,39 @@ Dispatch a message to all subscribers:
 
 Subscibers to a message type will also receive notification of all messages that derive from that type. So, you can create a base class for all of your messages, subscribe to that and receive all messages sent through the broker.
 
+### Pipelines
 
-### Coming soon
-- Async message publishing/subscription
+Runs a sequence of actions against a given message.
+
+Firstly, create a message to be passed along the pipeline, this should implement `IPipelineMessage`:
+```csharp
+public class SomePipelineMessage : IPipelineMessage
+{
+    public string Text { get; }
+}
+```
+
+Then, define actions that can be performed on this message using `IPipelineTask<T>`, where `T` is the type of message this task should handle:
+```csharp
+public class PipelineTaskFoo : IPipelineTask<SomePipelineMessage>
+{
+    public async Task Run(SomePipelineMessage message)
+    {
+        message.Text += "Foo"
+    }
+}
+```
+
+Finally, construct a pipeline to process these items:
+```csharp
+_broker.ConstructPipeline<PipelineMessage>(p =>
+    {
+        p.Add<PipelineTaskFoo>();
+        p.Add<PipelineTaskFoo>();
+    });
+```
+
+You can then call the pipeline for your message in a single line. MiddleMan will find the correct pipeline
+to handle the message you pass it.
+
+If there are no pipelines registered for the type of message you pass to the broker, the message will simply be ignored.

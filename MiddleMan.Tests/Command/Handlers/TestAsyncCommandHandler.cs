@@ -1,7 +1,7 @@
 namespace MiddleMan.Tests.Command.Handlers
 {
     using System.Threading.Tasks;
-    using Interfaces.Command;
+    using MiddleMan.Command;
 
     public class AsyncCommandHandler : ICommandHandlerAsync<TestAsyncCommand>
     {

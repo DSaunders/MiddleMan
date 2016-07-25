@@ -1,4 +1,4 @@
-namespace MiddleMan.Interfaces.Query
+namespace MiddleMan.Query
 {
     using System.Threading.Tasks;
 

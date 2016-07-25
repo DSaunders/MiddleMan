@@ -1,7 +1,7 @@
 namespace MiddleMan
 {
     using System;
-    using Interfaces.Message;
+    using Message;
 
     internal class Subscription<T> : ISubscription where T : IMessage
     {

@@ -1,4 +1,4 @@
-namespace MiddleMan.Interfaces.Query
+namespace MiddleMan.Query
 {
     public interface IQueryHandler<in TQuery, out TResponse> : IHandler
         where TQuery : IQuery<TResponse>

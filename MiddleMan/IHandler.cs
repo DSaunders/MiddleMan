@@ -1,4 +1,4 @@
-﻿namespace MiddleMan.Interfaces
+﻿namespace MiddleMan
 {
     public interface IHandler { }
 }
