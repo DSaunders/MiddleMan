@@ -1,4 +1,4 @@
-﻿namespace MiddleMan.Tests.Message
+﻿namespace MiddleMan.Tests.Message.Messages
 {
     using System.Collections.Generic;
 

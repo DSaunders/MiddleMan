@@ -1,14 +1,14 @@
-﻿namespace MiddleMan.Tests.Message
+﻿namespace MiddleMan.Tests.Message.Messages
 {
     using System.Collections.Generic;
     using MiddleMan.Message;
 
-    public class MessageParent : IMessage
+    public class TestMessage : IMessage
     {
         public string MessageText { get; }
         public List<string> Subscribers { get; }
 
-        public MessageParent(string message, List<string> subscribers)
+        public TestMessage(string message, List<string> subscribers)
         {
             Subscribers = subscribers;
             MessageText = message;

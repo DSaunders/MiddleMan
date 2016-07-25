@@ -72,15 +72,19 @@
     <Compile Include="Command\TestAsyncCommand.cs" />
     <Compile Include="Command\TestCommand.cs" />
     <Compile Include="Command\Handlers\TestCommandHandler.cs" />
-    <Compile Include="Message\MessageChildSubscriber.cs" />
-    <Compile Include="Message\MessageParentSubscriber.cs" />
-    <Compile Include="Message\SomeOtherMessage.cs" />
-    <Compile Include="Message\SomeOtherMessageSubscriberThatThrows.cs" />
-    <Compile Include="Message\TestMessageSubscriberBar.cs" />
-    <Compile Include="Message\MessageChild.cs" />
-    <Compile Include="Message\MessageParent.cs" />
-    <Compile Include="Message\TestMessage.cs" />
-    <Compile Include="Message\TestMessageSubscriberFoo.cs" />
+    <Compile Include="MessageBrokerTests_Commands.cs" />
+    <Compile Include="MessageBrokerTests_Messages.cs" />
+    <Compile Include="MessageBrokerTests_Setup.cs" />
+    <Compile Include="MessageBrokerTests_Pipeline.cs" />
+    <Compile Include="Message\Subscriber\MessageChildSubscriber.cs" />
+    <Compile Include="Message\Subscriber\MessageParentSubscriber.cs" />
+    <Compile Include="Message\Messages\SomeOtherMessage.cs" />
+    <Compile Include="Message\Subscriber\SomeOtherMessageSubscriberThatThrows.cs" />
+    <Compile Include="Message\Subscriber\TestMessageSubscriberBar.cs" />
+    <Compile Include="Message\Messages\MessageChild.cs" />
+    <Compile Include="Message\Messages\MessageParent.cs" />
+    <Compile Include="Message\Messages\TestMessage.cs" />
+    <Compile Include="Message\Subscriber\TestMessageSubscriberFoo.cs" />
     <Compile Include="Pipeline\PipelineMessage.cs" />
     <Compile Include="Pipeline\PipelineTaskBar.cs" />
     <Compile Include="Pipeline\PipelineTaskFoo.cs" />
@@ -95,7 +99,7 @@
     <Compile Include="Query\TestQuery.cs" />
     <Compile Include="Query\Handlers\MultipleHandler2.cs" />
     <Compile Include="Query\Handlers\TestQueryHandler.cs" />
-    <Compile Include="MessageBrokerTests.cs" />
+    <Compile Include="MessageBrokerTests_Queries.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Query\TestQueryAsync.cs" />
   </ItemGroup>

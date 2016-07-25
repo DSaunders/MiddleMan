@@ -1,6 +1,7 @@
-﻿namespace MiddleMan.Tests.Message
+﻿namespace MiddleMan.Tests.Message.Subscriber
 {
     using System.Threading.Tasks;
+    using Messages;
     using MiddleMan.Message;
 
     public class MessageParentSubscriber : IMessageSubscriber<MessageParent>
