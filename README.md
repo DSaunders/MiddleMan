@@ -2,10 +2,8 @@
 
 A library for abstracting your code into commands, queries, messages and pipelines.
 
-## Getting started
+## Installation
 - Install via [Nuget]().
-- Create your Command and Query handlers (see below)
-- Take a dependency on `IBroker` to start passing commands/queries
 
 ## Setup
 
