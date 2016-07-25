@@ -7,9 +7,9 @@ A library for abstracting your code into commands, queries, messages and pipelin
 
 ## Setup
 
-MiddleMan is designed to make configuration easier by allowing you to implement interfaces for everything and have it 'just work'. This works best when your container auto-registers everything for you, and supports multiple concrete types for a given interface.
+MiddleMan is designed to make configuration easier by allowing you to implement interfaces for everything and have it 'just work'.
 
-If you need to register your dependencies manually, see 'Manual IoC container setup'.
+This works best when your container auto-registers everything for you, and supports multiple concrete types for a given interface by default. If you need to register your dependencies manually, see 'Manual IoC container setup'.
 
 ## Queries
 
