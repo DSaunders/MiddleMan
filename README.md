@@ -147,14 +147,15 @@ public class SomePipelineMessage : IPipelineMessage
 
 Then, create the steps of the pipeline. The simplest way to do this is to derive each task in the pipeline from `PipelineTaskBase<T>`, where `T` is the message type that the pipeline task will process.
 
-You are passed the next step in the pipeline. You can either call the next step using `Next()`, or terminate the pipeline early by doing nothing.
-
 ```csharp
 public class SomePipelineTask : PipelineTaskBase<SomePipelineMessage>
 {
     public override void Run(SomePipelineMessage message)
     {
         message.Text += "Foo"
+
+        // Call the next step in the pipeline.
+        // Alternatively, do nothing and terminate the pipeline early
         Next(message);
     }
 }
