@@ -48,9 +48,14 @@ namespace MiddleMan
             return GetProcessorWithOutputForType<IQuery<TOut>, IHandler, TOut>(query, _handlers, typeof(IQueryHandlerAsync<,>));
         }
 
-        public List<IMessageSubscriber> GetAsyncMessageSubscribers(IMessage message)
+        public List<IMessageSubscriber> GetMessageSubscribers(IMessage message)
         {
             return GetProcessorForTypeAndDerived(message, _messageSubscribers, typeof(IMessageSubscriber<>));
+        }
+
+        public List<IMessageSubscriber> GetAsyncMessageSubscribers(IMessage message)
+        {
+            return GetProcessorForTypeAndDerived(message, _messageSubscribers, typeof(IMessageSubscriberAsync<>));
         }
 
         public List<IPipeline> GetPipelines(IPipelineMessage message)

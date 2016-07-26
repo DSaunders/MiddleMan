@@ -1,12 +1,11 @@
-﻿namespace MiddleMan.Tests.Fakes.Message.Subscribers
+﻿namespace MiddleMan.Tests.Fakes.Message.Subscribers.Sync
 {
-    using System.Threading.Tasks;
     using Messages;
     using MiddleMan.Message;
 
     public class MessageParentSubscriber : IMessageSubscriber<MessageParent>
     {
-        public async Task OnMessageReceived(MessageParent message)
+        public void OnMessageReceived(MessageParent message)
         {
             message.Subscribers.Add("MessageParent");
         }

@@ -4,6 +4,7 @@
     using Exceptions;
     using Fakes;
     using Fakes.Pipeline;
+    using Fakes.Pipeline.EmptyPipeline;
     using Fakes.Pipeline.MultiplePipelines;
     using Fakes.Pipeline.NoPipelines;
     using Should;
@@ -61,6 +62,19 @@
         }
 
         [Fact]
+        public void Does_Not_Throw_When_Pipeline_Is_Empty()
+        {
+            // Given
+            var message = new EmptyPipelineMessage();
+
+            // When
+            var ex = Record.Exception(() => _broker.RunPipeline(message));
+
+            // Then
+            ex.ShouldBeNull();
+        }
+
+        [Fact]
         public async Task Runs_Pipeline_Async()
         {
             // Given
@@ -94,6 +108,19 @@
         {
             // Given
             var message = new NoPipelinesMessage();
+
+            // When
+            var ex = Record.Exception(() => _broker.RunPipelineAsync(message).Wait());
+
+            // Then
+            ex.ShouldBeNull();
+        }
+
+        [Fact]
+        public void Does_Not_Throw_When_Async_Pipeline_Is_Empty()
+        {
+            // Given
+            var message = new EmptyPipelineMessage();
 
             // When
             var ex = Record.Exception(() => _broker.RunPipelineAsync(message).Wait());

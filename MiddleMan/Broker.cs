@@ -82,6 +82,17 @@ namespace MiddleMan
         }
 
 
+        public void SendMessage<T>(T message) where T : class, IMessage
+        {
+            var subscribers = _factory.GetMessageSubscribers(message);
+
+            foreach (var subscriber in subscribers)
+            {
+                dynamic dynamicSubscriber = subscriber;
+                dynamicSubscriber.OnMessageReceived(message);
+            }
+        }
+        
         public async Task SendMessageAsync<T>(T message) where T : class, IMessage
         {
             var subscribers = _factory.GetAsyncMessageSubscribers(message);
@@ -109,7 +120,10 @@ namespace MiddleMan
             var builder = new PipelineBuilder<TPipelineMessage>();
             thisPipeline.GetPipelineTasks(builder);
 
-            var taskTypes = builder.Get();
+            var taskTypes = builder.Get().ToList();
+            if (!taskTypes.Any())
+                return;
+            
             var tasks = taskTypes.Select(t => (IPipelineTask<TPipelineMessage>)_factory.GetPipelineHandler(t)).ToList();
 
             for (var i = 0; i < tasks.Count - 1; i++)
@@ -142,7 +156,10 @@ namespace MiddleMan
             var builder = new PipelineBuilderAsync<TPipelineMessage>();
             thisPipeline.GetPipelineTasks(builder);
 
-            var taskTypes = builder.Get();
+            var taskTypes = builder.Get().ToList();
+            if (!taskTypes.Any())
+                return;
+
             var tasks = taskTypes.Select(t => (IPipelineTaskAsync<TPipelineMessage>)_factory.GetPipelineHandler(t)).ToList();
 
             for (var i = 0; i < tasks.Count - 1; i++)

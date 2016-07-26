@@ -14,6 +14,7 @@
         void ProcessCommand(ICommand command);
         Task ProcessCommandAsync(ICommand command);
 
+        void SendMessage<T>(T message) where T : class, IMessage;
         Task SendMessageAsync<T>(T message) where T : class, IMessage;
 
         void RunPipeline<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage;

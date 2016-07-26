@@ -3,14 +3,18 @@
     using System.Collections.Generic;
     using Command.Handlers;
     using Message.Subscribers;
+    using Message.Subscribers.Async;
+    using Message.Subscribers.Sync;
     using MiddleMan;
     using MiddleMan.Message;
     using MiddleMan.Pipeline;
     using MiddleMan.Pipeline.Tasks;
     using Pipeline.AsyncPipeline;
+    using Pipeline.EmptyPipeline;
     using Pipeline.MultiplePipelines;
     using Pipeline.SyncPipeline;
     using Query.Handlers;
+    using SomeOtherMessageSubscriberAsyncThatThrows = Message.Subscribers.Sync.SomeOtherMessageSubscriberAsyncThatThrows;
 
     public static class FakeIoCSetup
     {
@@ -34,6 +38,11 @@
 
             var subscribers = new List<IMessageSubscriber>
             {
+                new MessageChildSubscriberAsync(),
+                new MessageParentSubscriberAsync(),
+                new SomeOtherMessageSubscriberAsyncThatThrows(),
+                new TestMessageSubscriberAsyncFoo(),
+                new TestMessageSubscriberAsyncBar(),
                 new MessageChildSubscriber(),
                 new MessageParentSubscriber(),
                 new SomeOtherMessageSubscriberThatThrows(),
@@ -57,6 +66,8 @@
                 new MultiplePipelineMessagePipeline2(),
                 new MultiplePipelineMessagePipelineAsync1(),
                 new MultiplePipelineMessagePipelineAsync2(),
+                new EmptyPipeline(),
+                new EmptyPipelineAsync()
             };
 
             return new Broker(handlers, subscribers, pipelineTasks, pipelines);

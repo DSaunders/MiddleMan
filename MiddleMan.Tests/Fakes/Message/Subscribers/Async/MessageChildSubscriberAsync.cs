@@ -1,10 +1,10 @@
-﻿namespace MiddleMan.Tests.Fakes.Message.Subscribers
+﻿namespace MiddleMan.Tests.Fakes.Message.Subscribers.Async
 {
     using System.Threading.Tasks;
     using Messages;
     using MiddleMan.Message;
 
-    public class MessageChildSubscriber : IMessageSubscriber<MessageChild>
+    public class MessageChildSubscriberAsync : IMessageSubscriberAsync<MessageChild>
     {
         public async Task OnMessageReceived(MessageChild message)
         {

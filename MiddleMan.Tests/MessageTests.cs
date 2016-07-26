@@ -17,7 +17,68 @@
         }
 
         [Fact]
-        public async Task Dispatches_Messages_To_Subscribers()
+        public void Dispatches_Messages_To_Subscriibers()
+        {
+            // Arrange
+            var subscribersCalled = new List<string>();
+            var message = new TestMessage("Hello, World!", subscribersCalled);
+
+            // Act
+            _broker.SendMessage(message);
+
+            // Assert
+            subscribersCalled.Count.ShouldEqual(2);
+            subscribersCalled.ShouldContain("Foo");
+            subscribersCalled.ShouldContain("Bar");
+        }
+
+        [Fact]
+        public void Does_Not_Dispatch_Messages_To_Other_Subscribers()
+        {
+            // Arrange
+            var message = new TestMessage("Hello, World!", new List<string>());
+
+            // Act
+            _broker.SendMessage(message);
+
+            // Assert
+            // If all subscribers are called, one of them throws an exception so this test will fail
+        }
+
+        [Fact]
+        public void Dispatches_Messages_To_Subscribers_Who_Subscribe_To_Ancestor_MessageType()
+        {
+            // Arrange
+            var subscribersHit = new List<string>();
+            var message = new MessageChild("Child Message", subscribersHit);
+
+            // Act
+            _broker.SendMessage(message);
+
+            // Assert
+            subscribersHit.Count.ShouldEqual(2);
+            subscribersHit.ShouldContain("MessageParent");
+            subscribersHit.ShouldContain("MessageChild");
+        }
+
+        [Fact]
+        public void Does_Not_Dispatch_Messages_To_Subscribers_Who_Subscribe_To_Derived_MessageTypes()
+        {
+            // Arrange
+            var subscribersHit = new List<string>();
+            var message = new MessageParent("Parent Message", subscribersHit);
+
+            // Act
+            _broker.SendMessage(message);
+
+            // Assert
+            subscribersHit.Count.ShouldEqual(1);
+            subscribersHit.ShouldContain("MessageParent");
+        }
+
+
+        [Fact]
+        public async Task Dispatches_Async_Messages_To_Subscribers()
         {
             // Arrange
             var subscribersCalled = new List<string>();
@@ -33,7 +94,7 @@
         }
 
         [Fact]
-        public async Task Does_Not_Dispatch_To_Other_Subscribers()
+        public async Task Does_Not_Dispatch_Async_Messages_To_Other_Subscribers()
         {
             // Arrange
             var message = new TestMessage("Hello, World!", new List<string>());
@@ -46,7 +107,7 @@
         }
 
         [Fact]
-        public async Task Dispatches_Messages_To_Subscribers_Who_Subscribe_To_Ancestor_MessageType()
+        public async Task Dispatches_Async_Messages_To_Subscribers_Who_Subscribe_To_Ancestor_MessageType()
         {
             // Arrange
             var subscribersHit = new List<string>();
@@ -62,7 +123,7 @@
         }
 
         [Fact]
-        public async Task Does_Not_Dispatch_Messages_To_Subscribers_Who_Subscribe_To_Derived_MessageTypes()
+        public async Task Does_Not_Dispatch_Async_Messages_To_Subscribers_Who_Subscribe_To_Derived_MessageTypes()
         {
             // Arrange
             var subscribersHit = new List<string>();
