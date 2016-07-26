@@ -1,5 +1,6 @@
 namespace MiddleMan
 {
+    using System;
     using System.Collections.Generic;
     using System.Linq;
     using System.Threading.Tasks;
@@ -14,6 +15,7 @@ namespace MiddleMan
     public class Broker : IBroker
     {
         private readonly TypeFactory _factory;
+        private Action<string> _log;
 
         public Broker(IEnumerable<IHandler> handlers,
             IEnumerable<IMessageSubscriber> messageSubscribers,
@@ -25,6 +27,8 @@ namespace MiddleMan
 
         public TOut ProcessQuery<TOut>(IQuery<TOut> query)
         {
+            Log("Query", query);
+
             var handlers = _factory.GetQueryHandlers(query);
 
             if (!handlers.Any())
@@ -40,6 +44,8 @@ namespace MiddleMan
 
         public Task<TOut> ProcessQueryAsync<TOut>(IQuery<TOut> query)
         {
+            Log("QueryAsync", query);
+
             var handlers = _factory.GetAsyncQueryHandlers(query);
 
             if (!handlers.Any())
@@ -55,6 +61,8 @@ namespace MiddleMan
 
         public void ProcessCommand(ICommand command)
         {
+            Log("Command", command);
+
             var handlers = _factory.GetCommandHandlers(command);
 
             if (!handlers.Any())
@@ -69,6 +77,8 @@ namespace MiddleMan
 
         public async Task ProcessCommandAsync(ICommand command)
         {
+            Log("CommandAsync", command);
+
             var handlers = _factory.GetAsyncCommandHandlers(command);
 
             if (!handlers.Any())
@@ -84,6 +94,8 @@ namespace MiddleMan
 
         public void SendMessage<T>(T message) where T : class, IMessage
         {
+            Log("Message", message);
+
             var subscribers = _factory.GetMessageSubscribers(message);
 
             foreach (var subscriber in subscribers)
@@ -95,6 +107,8 @@ namespace MiddleMan
         
         public async Task SendMessageAsync<T>(T message) where T : class, IMessage
         {
+            Log("MessageAsync", message);
+
             var subscribers = _factory.GetAsyncMessageSubscribers(message);
 
             foreach (var subscriber in subscribers)
@@ -107,6 +121,8 @@ namespace MiddleMan
 
         public void RunPipeline<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage
         {
+            Log("PieplineMessage", message);
+
             var pipelines = _factory.GetPipelines(message);
 
             if (!pipelines.Any())
@@ -143,6 +159,8 @@ namespace MiddleMan
         
         public async Task RunPipelineAsync<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage
         {
+            Log("PipelineMessageAsync", message);
+
             var pipelines = _factory.GetAsyncPipelines(message);
 
             if (!pipelines.Any())
@@ -175,6 +193,16 @@ namespace MiddleMan
 
             // Run pipeline
             await tasks.First().Run(message).ConfigureAwait(false);
+        }
+
+        public void SetLogCalback(Action<string> callback)
+        {
+            _log = callback;
+        }
+
+        private void Log(string logType, object thing)
+        {
+            _log?.Invoke("Received " + logType + ": " + thing.GetType().Name);
         }
     }
 }

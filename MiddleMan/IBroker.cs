@@ -1,5 +1,6 @@
 ﻿namespace MiddleMan
 {
+    using System;
     using System.Threading.Tasks;
     using Command;
     using Message;
@@ -19,5 +20,7 @@
 
         void RunPipeline<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage;
         Task RunPipelineAsync<TPipelineMessage>(TPipelineMessage message) where TPipelineMessage : class, IPipelineMessage;
+
+        void SetLogCalback(Action<string> callback);
     }
 }
